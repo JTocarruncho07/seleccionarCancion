@@ -33,6 +33,24 @@ const Admin = ({ onLogout }) => {
     const reproducidasGuardadas = JSON.parse(localStorage.getItem('cancionesReproducidas') || '[]')
     setReproducidas(new Set(reproducidasGuardadas))
 
+    // Escuchar cambios en localStorage
+    const handleStorageChange = (e) => {
+      if (e.key === 'solicitudesCanciones') {
+        const solicitudes = JSON.parse(e.newValue)
+        const ultimaSolicitud = solicitudes[solicitudes.length - 1]
+        
+        if (ultimaSolicitud && 'Notification' in window) {
+          new Notification('🎵 Nueva solicitud de canción', {
+            body: ultimaSolicitud.cancion,
+            icon: '/icon.svg',
+            tag: 'nueva-cancion'
+          })
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
     // Manejar instalación PWA
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
@@ -48,6 +66,7 @@ const Admin = ({ onLogout }) => {
     }
 
     return () => {
+      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
   }, [])
@@ -111,6 +130,7 @@ const Admin = ({ onLogout }) => {
 
   const limpiarTodas = () => {
     if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
+      setSolicitudes([])
       setReproducidas(new Set())
       localStorage.setItem('cancionesReproducidas', '[]')
     }
