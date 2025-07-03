@@ -10,9 +10,8 @@ const Admin = ({ onLogout }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
-  const [reproducidas, setReproducidas] = useState(new Set())
 
-  const QR_URL = 'https://seleccionarcancion.netlify.app/usuario'
+  const QR_URL = 'https://selcancion.netlify.app/usuario'
 
   const coleccionSolicitudes = collection(db, "solicitudesCanciones")
 
@@ -29,28 +28,6 @@ const Admin = ({ onLogout }) => {
   }, [])
 
   useEffect(() => {
-    // Cargar canciones reproducidas
-    const reproducidasGuardadas = JSON.parse(localStorage.getItem('cancionesReproducidas') || '[]')
-    setReproducidas(new Set(reproducidasGuardadas))
-
-    // Escuchar cambios en localStorage
-    const handleStorageChange = (e) => {
-      if (e.key === 'solicitudesCanciones') {
-        const solicitudes = JSON.parse(e.newValue)
-        const ultimaSolicitud = solicitudes[solicitudes.length - 1]
-        
-        if (ultimaSolicitud && 'Notification' in window) {
-          new Notification('🎵 Nueva solicitud de canción', {
-            body: ultimaSolicitud.cancion,
-            icon: '/icon.svg',
-            tag: 'nueva-cancion'
-          })
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-
     // Manejar instalación PWA
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
@@ -66,7 +43,6 @@ const Admin = ({ onLogout }) => {
     }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
   }, [])
@@ -131,9 +107,7 @@ const Admin = ({ onLogout }) => {
   const limpiarTodas = () => {
     if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
       setSolicitudes([])
-      setReproducidas(new Set())
       localStorage.setItem('solicitudesCanciones', '[]')
-      localStorage.setItem('cancionesReproducidas', '[]')
     }
   }
 
@@ -241,19 +215,18 @@ const Admin = ({ onLogout }) => {
                       </div>
                       <div className="space-y-3">
                         {solicitudesDelDia.map((solicitud) => {
-                          const isReproducida = reproducidas.has(solicitud.id)
                           return (
                             <div key={solicitud.id} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100 animate-fade-in">
                               <div className="flex justify-between items-start">
                                 <div className="flex-1 flex items-start space-x-3">
                                   <input
                                     type="checkbox"
-                                    checked={isReproducida}
+                                    checked={solicitud.reproducida}
                                     onChange={() => toggleReproducida(solicitud.id)}
                                     className="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
                                   />
                                   <div className="flex-1">
-                                    <h3 className={`font-semibold text-lg ${isReproducida ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
+                                    <h3 className={`font-semibold text-lg ${solicitud.reproducida ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
                                       {solicitud.cancion}
                                     </h3>
                                     <p className="text-gray-500 text-sm">
@@ -327,11 +300,11 @@ const Admin = ({ onLogout }) => {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Reproducidas:</span>
-                  <span className="font-bold text-green-600">{reproducidas.size}</span>
+                  <span className="font-bold text-green-600">{solicitudes.filter(s => s.reproducida).length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Pendientes:</span>
-                  <span className="font-bold text-orange-600">{solicitudes.length - reproducidas.size}</span>
+                  <span className="font-bold text-orange-600">{solicitudes.filter(s => !s.reproducida).length}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Notificaciones:</span>
