@@ -10,6 +10,7 @@
     "preview": "vite preview --open"
   },
   "dependencies": {
+    "firebase": "^11.10.0",
     "lucide-react": "^0.525.0",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",

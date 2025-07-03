@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import SpotifyService from '../services/SpotifyService'
 import { Music } from 'lucide-react'
+import { db, collection, addDoc } from '../services/FirebaseService'
 
 const Usuario = () => {
   const [cancion, setCancion] = useState('')
@@ -9,6 +10,7 @@ const Usuario = () => {
   const [enviado, setEnviado] = useState(false)
   const [error, setError] = useState('')
   const timeoutRef = useRef(null)
+  const coleccionSolicitudes = collection(db, "solicitudesCanciones")
 
   useEffect(() => {
     if (cancion.length >= 3) {
@@ -41,7 +43,7 @@ const Usuario = () => {
     }
   }, [cancion])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     if (!cancion.trim()) {
@@ -50,32 +52,11 @@ const Usuario = () => {
     }
 
     try {
-      // Guardar en localStorage
-      const nuevaSolicitud = {
-        id: Date.now(),
+      // Guardar en Firestore
+      await addDoc(coleccionSolicitudes, {
         cancion: cancion.trim(),
-        timestamp: new Date().toISOString(),
-        fecha: new Date().toLocaleString('es-ES')
-      }
-
-      const solicitudesExistentes = JSON.parse(localStorage.getItem('solicitudesCanciones') || '[]')
-      solicitudesExistentes.push(nuevaSolicitud)
-      localStorage.setItem('solicitudesCanciones', JSON.stringify(solicitudesExistentes))
-
-      // Notificar al service worker si está disponible
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          type: 'NUEVA_CANCION',
-          cancion: cancion.trim(),
-          artista: 'Usuario'
-        })
-      }
-
-      // Disparar evento storage para que Admin lo detecte
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'solicitudesCanciones',
-        newValue: JSON.stringify(solicitudesExistentes)
-      }))
+        timestamp: new Date().toISOString()
+      })
 
       setEnviado(true)
       setCancion('')

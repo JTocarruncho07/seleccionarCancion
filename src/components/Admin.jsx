@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import PropTypes from 'prop-types'
 import { Music } from 'lucide-react'
+import { db, collection, onSnapshot, deleteDoc, doc, updateDoc } from '../services/FirebaseService'
 
 const Admin = ({ onLogout }) => {
   const [solicitudes, setSolicitudes] = useState([])
@@ -13,10 +14,21 @@ const Admin = ({ onLogout }) => {
 
   const QR_URL = 'https://seleccionarcancion.netlify.app/usuario'
 
+  const coleccionSolicitudes = collection(db, "solicitudesCanciones")
+
   useEffect(() => {
     // Cargar solicitudes iniciales
-    cargarSolicitudes()
-    
+    const unsuscribe = onSnapshot(coleccionSolicitudes, (snapshot) => {
+      const docs = []
+      snapshot.forEach(docSnap => {
+        docs.push({ ...docSnap.data(), id: docSnap.id })
+      })
+      setSolicitudes(docs.reverse())
+    })
+    return () => unsuscribe()
+  }, [])
+
+  useEffect(() => {
     // Cargar canciones reproducidas
     const reproducidasGuardadas = JSON.parse(localStorage.getItem('cancionesReproducidas') || '[]')
     setReproducidas(new Set(reproducidasGuardadas))
@@ -24,20 +36,15 @@ const Admin = ({ onLogout }) => {
     // Escuchar cambios en localStorage
     const handleStorageChange = (e) => {
       if (e.key === 'solicitudesCanciones') {
-        cargarSolicitudes()
+        const solicitudes = JSON.parse(e.newValue)
+        const ultimaSolicitud = solicitudes[solicitudes.length - 1]
         
-        // Mostrar notificación si está habilitada
-        if (notificationsEnabled && e.newValue) {
-          const solicitudes = JSON.parse(e.newValue)
-          const ultimaSolicitud = solicitudes[solicitudes.length - 1]
-          
-          if (ultimaSolicitud && 'Notification' in window) {
-            new Notification('🎵 Nueva solicitud de canción', {
-              body: ultimaSolicitud.cancion,
-              icon: '/icon.svg',
-              tag: 'nueva-cancion'
-            })
-          }
+        if (ultimaSolicitud && 'Notification' in window) {
+          new Notification('🎵 Nueva solicitud de canción', {
+            body: ultimaSolicitud.cancion,
+            icon: '/icon.svg',
+            tag: 'nueva-cancion'
+          })
         }
       }
     }
@@ -62,12 +69,7 @@ const Admin = ({ onLogout }) => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
-  }, [notificationsEnabled])
-
-  const cargarSolicitudes = () => {
-    const solicitudesGuardadas = JSON.parse(localStorage.getItem('solicitudesCanciones') || '[]')
-    setSolicitudes(solicitudesGuardadas.reverse()) // Más recientes primero
-  }
+  }, [])
 
   const agruparSolicitudesPorFecha = () => {
     const grupos = {}
@@ -122,10 +124,8 @@ const Admin = ({ onLogout }) => {
     }, 100)
   }
 
-  const eliminarSolicitud = (id) => {
-    const solicitudesFiltradas = solicitudes.filter(s => s.id !== id)
-    setSolicitudes(solicitudesFiltradas)
-    localStorage.setItem('solicitudesCanciones', JSON.stringify(solicitudesFiltradas.reverse()))
+  const eliminarSolicitud = async (id) => {
+    await deleteDoc(doc(db, "solicitudesCanciones", id))
   }
 
   const limpiarTodas = () => {
@@ -137,17 +137,12 @@ const Admin = ({ onLogout }) => {
     }
   }
 
-  const toggleReproducida = (id) => {
-    const nuevasReproducidas = new Set(reproducidas)
-    if (nuevasReproducidas.has(id)) {
-      nuevasReproducidas.delete(id)
-    } else {
-      nuevasReproducidas.add(id)
-    }
-    setReproducidas(nuevasReproducidas)
-    
-    // Guardar en localStorage
-    localStorage.setItem('cancionesReproducidas', JSON.stringify(Array.from(nuevasReproducidas)))
+  const toggleReproducida = async (id) => {
+    const solicitud = solicitudes.find(s => s.id === id)
+    if (!solicitud) return
+    await updateDoc(doc(db, "solicitudesCanciones", id), {
+      reproducida: !solicitud.reproducida
+    })
   }
 
   const handleLogout = () => {
