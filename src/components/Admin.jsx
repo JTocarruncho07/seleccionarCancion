@@ -33,6 +33,24 @@ const Admin = ({ onLogout }) => {
     const reproducidasGuardadas = JSON.parse(localStorage.getItem('cancionesReproducidas') || '[]')
     setReproducidas(new Set(reproducidasGuardadas))
 
+    // Escuchar cambios en localStorage
+    const handleStorageChange = (e) => {
+      if (e.key === 'solicitudesCanciones') {
+        const solicitudes = JSON.parse(e.newValue)
+        const ultimaSolicitud = solicitudes[solicitudes.length - 1]
+        
+        if (ultimaSolicitud && 'Notification' in window) {
+          new Notification('🎵 Nueva solicitud de canción', {
+            body: ultimaSolicitud.cancion,
+            icon: '/icon.svg',
+            tag: 'nueva-cancion'
+          })
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
     // Manejar instalación PWA
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
@@ -48,6 +66,7 @@ const Admin = ({ onLogout }) => {
     }
 
     return () => {
+      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
   }, [])
@@ -107,6 +126,15 @@ const Admin = ({ onLogout }) => {
 
   const eliminarSolicitud = async (id) => {
     await deleteDoc(doc(db, "solicitudesCanciones", id))
+  }
+
+  const limpiarTodas = () => {
+    if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
+      setSolicitudes([])
+      setReproducidas(new Set())
+      localStorage.setItem('solicitudesCanciones', '[]')
+      localStorage.setItem('cancionesReproducidas', '[]')
+    }
   }
 
   const toggleReproducida = async (id) => {
@@ -183,6 +211,14 @@ const Admin = ({ onLogout }) => {
                   <h2 className="text-2xl font-bold text-gray-800">Solicitudes de Canciones</h2>
                   <p className="text-gray-600">Total: {solicitudes.length} solicitudes</p>
                 </div>
+                {solicitudes.length > 0 && (
+                  <button
+                    onClick={limpiarTodas}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                  >
+                    Limpiar Todo
+                  </button>
+                )}
               </div>
 
               {/* Lista de solicitudes */}
