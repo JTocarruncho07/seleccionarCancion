@@ -1,11 +1,10 @@
 const CACHE_NAME = 'solicitar-cancion-v1';
 const urlsToCache = [
   '/',
-  '/admin',
-  '/usuario',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
-  '/icon.svg'
+  '/icon.svg',
+  '/manifest.json',
+  '/musica.png',
+  '/vite.svg'
 ];
 
 // Instalación del service worker
@@ -17,26 +16,23 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Estrategia de cache
+// Estrategia de cache: cache first, fallback a red
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
 
-// Escuchar mensajes para mostrar notificaciones
+// Notificaciones push (opcional, si usas esta lógica)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'NUEVA_CANCION') {
     const { cancion, artista } = event.data;
-    
     self.registration.showNotification('🎵 Nueva solicitud de canción', {
       body: `${cancion} - ${artista}`,
       icon: '/icon.svg',
@@ -53,10 +49,8 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Manejar clicks en notificaciones
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  
   if (event.action === 'ver') {
     event.waitUntil(
       self.clients.openWindow('/admin')
@@ -64,9 +58,9 @@ self.addEventListener('notificationclick', (event) => {
   }
 });
 
-// Actualización del service worker
+// Activación y limpieza de caches viejos
 self.addEventListener('activate', (event) => {
-  clients.claim();
+  self.clients.claim();
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
