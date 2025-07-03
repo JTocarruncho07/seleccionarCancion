@@ -3,6 +3,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
+import { registerServiceWorker } from './registerSW'
+
+registerServiceWorker(() => {
+  if (window.confirm('¡Hay una nueva versión disponible! ¿Actualizar ahora?')) {
+    window.location.reload();
+  }
+});
 
 // Registrar service worker solo para admin
 if ('serviceWorker' in navigator) {

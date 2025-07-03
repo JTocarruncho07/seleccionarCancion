@@ -10,6 +10,7 @@ const urlsToCache = [
 
 // Instalación del service worker
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(urlsToCache))
@@ -65,6 +66,7 @@ self.addEventListener('notificationclick', (event) => {
 
 // Actualización del service worker
 self.addEventListener('activate', (event) => {
+  clients.claim();
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
