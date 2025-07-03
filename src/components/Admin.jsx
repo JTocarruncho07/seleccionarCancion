@@ -11,22 +11,35 @@ const Admin = ({ onLogout }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
   const [reproducidas, setReproducidas] = useState(new Set())
+  const [lastDocCount, setLastDocCount] = useState(0)
 
   const QR_URL = 'https://seleccionarcancion.netlify.app/usuario'
 
   const coleccionSolicitudes = collection(db, "solicitudesCanciones")
 
   useEffect(() => {
-    // Cargar solicitudes iniciales
+    // Cargar solicitudes iniciales y notificar si hay nuevas
     const unsuscribe = onSnapshot(coleccionSolicitudes, (snapshot) => {
       const docs = []
       snapshot.forEach(docSnap => {
         docs.push({ ...docSnap.data(), id: docSnap.id })
       })
+      // Notificación si hay nuevas solicitudes
+      if (notificationsEnabled && docs.length > lastDocCount && lastDocCount !== 0) {
+        const nueva = docs[0]
+        if (nueva && 'Notification' in window) {
+          new Notification('🎵 Nueva solicitud de canción', {
+            body: nueva.cancion,
+            icon: '/icon.svg',
+            tag: 'nueva-cancion'
+          })
+        }
+      }
+      setLastDocCount(docs.length)
       setSolicitudes(docs.reverse())
     })
     return () => unsuscribe()
-  }, [])
+  }, [notificationsEnabled, lastDocCount])
 
   useEffect(() => {
     // Cargar canciones reproducidas
@@ -128,11 +141,17 @@ const Admin = ({ onLogout }) => {
     await deleteDoc(doc(db, "solicitudesCanciones", id))
   }
 
-  const limpiarTodas = () => {
+  const limpiarTodas = async () => {
     if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
+      // Borrar todos los documentos de la colección en Firestore
+      const snapshot = await onSnapshot(coleccionSolicitudes, () => {})
+      const docsToDelete = []
+      snapshot.forEach(docSnap => {
+        docsToDelete.push(deleteDoc(doc(db, "solicitudesCanciones", docSnap.id)))
+      })
+      await Promise.all(docsToDelete)
       setSolicitudes([])
       setReproducidas(new Set())
-      localStorage.setItem('solicitudesCanciones', '[]')
       localStorage.setItem('cancionesReproducidas', '[]')
     }
   }
