@@ -6,9 +6,7 @@ import './index.css'
 import { registerServiceWorker } from './registerSW'
 
 registerServiceWorker(() => {
-  if (window.confirm('¡Hay una nueva versión disponible! ¿Actualizar ahora?')) {
-    window.location.reload();
-  }
+  window.location.reload();
 });
 
 // Registrar service worker solo para admin

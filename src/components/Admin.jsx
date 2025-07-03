@@ -11,58 +11,27 @@ const Admin = ({ onLogout }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
   const [reproducidas, setReproducidas] = useState(new Set())
-  const [lastDocCount, setLastDocCount] = useState(0)
 
   const QR_URL = 'https://seleccionarcancion.netlify.app/usuario'
 
   const coleccionSolicitudes = collection(db, "solicitudesCanciones")
 
   useEffect(() => {
-    // Cargar solicitudes iniciales y notificar si hay nuevas
+    // Cargar solicitudes iniciales
     const unsuscribe = onSnapshot(coleccionSolicitudes, (snapshot) => {
       const docs = []
       snapshot.forEach(docSnap => {
         docs.push({ ...docSnap.data(), id: docSnap.id })
       })
-      // Notificación si hay nuevas solicitudes
-      if (notificationsEnabled && docs.length > lastDocCount && lastDocCount !== 0) {
-        const nueva = docs[0]
-        if (nueva && 'Notification' in window) {
-          new Notification('🎵 Nueva solicitud de canción', {
-            body: nueva.cancion,
-            icon: '/icon.svg',
-            tag: 'nueva-cancion'
-          })
-        }
-      }
-      setLastDocCount(docs.length)
       setSolicitudes(docs.reverse())
     })
     return () => unsuscribe()
-  }, [notificationsEnabled, lastDocCount])
+  }, [])
 
   useEffect(() => {
     // Cargar canciones reproducidas
     const reproducidasGuardadas = JSON.parse(localStorage.getItem('cancionesReproducidas') || '[]')
     setReproducidas(new Set(reproducidasGuardadas))
-
-    // Escuchar cambios en localStorage
-    const handleStorageChange = (e) => {
-      if (e.key === 'solicitudesCanciones') {
-        const solicitudes = JSON.parse(e.newValue)
-        const ultimaSolicitud = solicitudes[solicitudes.length - 1]
-        
-        if (ultimaSolicitud && 'Notification' in window) {
-          new Notification('🎵 Nueva solicitud de canción', {
-            body: ultimaSolicitud.cancion,
-            icon: '/icon.svg',
-            tag: 'nueva-cancion'
-          })
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
 
     // Manejar instalación PWA
     const handleBeforeInstallPrompt = (e) => {
@@ -79,7 +48,6 @@ const Admin = ({ onLogout }) => {
     }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
     }
   }, [])
@@ -141,16 +109,8 @@ const Admin = ({ onLogout }) => {
     await deleteDoc(doc(db, "solicitudesCanciones", id))
   }
 
-  const limpiarTodas = async () => {
+  const limpiarTodas = () => {
     if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
-      // Borrar todos los documentos de la colección en Firestore
-      const snapshot = await onSnapshot(coleccionSolicitudes, () => {})
-      const docsToDelete = []
-      snapshot.forEach(docSnap => {
-        docsToDelete.push(deleteDoc(doc(db, "solicitudesCanciones", docSnap.id)))
-      })
-      await Promise.all(docsToDelete)
-      setSolicitudes([])
       setReproducidas(new Set())
       localStorage.setItem('cancionesReproducidas', '[]')
     }
