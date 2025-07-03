@@ -128,14 +128,6 @@ const Admin = ({ onLogout }) => {
     await deleteDoc(doc(db, "solicitudesCanciones", id))
   }
 
-  const limpiarTodas = () => {
-    if (confirm('¿Estás seguro de que deseas eliminar todas las solicitudes?')) {
-      setSolicitudes([])
-      setReproducidas(new Set())
-      localStorage.setItem('cancionesReproducidas', '[]')
-    }
-  }
-
   const toggleReproducida = async (id) => {
     const solicitud = solicitudes.find(s => s.id === id)
     if (!solicitud) return
@@ -210,14 +202,6 @@ const Admin = ({ onLogout }) => {
                   <h2 className="text-2xl font-bold text-gray-800">Solicitudes de Canciones</h2>
                   <p className="text-gray-600">Total: {solicitudes.length} solicitudes</p>
                 </div>
-                {solicitudes.length > 0 && (
-                  <button
-                    onClick={limpiarTodas}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                  >
-                    Limpiar Todo
-                  </button>
-                )}
               </div>
 
               {/* Lista de solicitudes */}
