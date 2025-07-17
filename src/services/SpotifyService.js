@@ -1,7 +1,7 @@
 class SpotifyService {
   constructor() {
-    this.clientId = '830ba4e7f9064907b0eda146947e12f8' // ID público de demostración
-    this.clientSecret = '862f6151b2b546418b5b0ff9621a1783' // Secret de demostración
+    this.clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID // ID desde variable de entorno
+    this.clientSecret = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET // Secret desde variable de entorno
     this.accessToken = null
     this.tokenExpiry = null
     this.baseURL = 'https://api.spotify.com/v1'
