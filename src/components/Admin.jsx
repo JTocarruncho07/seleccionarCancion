@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import PropTypes from 'prop-types'
 import { Music } from 'lucide-react'
 import { db, collection, onSnapshot, deleteDoc, doc, updateDoc } from '../services/FirebaseService'
+import { format } from 'date-fns'
 
 const Admin = ({ onLogout }) => {
   const [solicitudes, setSolicitudes] = useState([])
@@ -10,6 +11,7 @@ const Admin = ({ onLogout }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
+  const [selectedDate, setSelectedDate] = useState(() => format(new Date(), 'yyyy-MM-dd'))
 
   const QR_URL = 'https://selcancion.netlify.app/usuario'
 
@@ -47,25 +49,24 @@ const Admin = ({ onLogout }) => {
     }
   }, [])
 
+  // Agrupar solicitudes por fecha (yyyy-MM-dd)
   const agruparSolicitudesPorFecha = () => {
     const grupos = {}
-    
     solicitudes.forEach(solicitud => {
-      const fecha = new Date(solicitud.timestamp).toLocaleDateString('es-ES', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-      
+      const fecha = format(new Date(solicitud.timestamp), 'yyyy-MM-dd')
       if (!grupos[fecha]) {
         grupos[fecha] = []
       }
       grupos[fecha].push(solicitud)
     })
-    
     return grupos
   }
+
+  // Obtener las fechas únicas para el filtro
+  const fechasDisponibles = Array.from(new Set(solicitudes.map(s => format(new Date(s.timestamp), 'yyyy-MM-dd')))).sort((a, b) => b.localeCompare(a))
+
+  // Filtrar solicitudes por la fecha seleccionada
+  const solicitudesFiltradas = agruparSolicitudesPorFecha()[selectedDate] || []
 
   const solicitarPermisoNotificaciones = async () => {
     if ('Notification' in window) {
@@ -136,7 +137,7 @@ const Admin = ({ onLogout }) => {
               <div>
                 <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
                 <p className="text-white/70 text-sm">Gestiona las solicitudes musicales</p>
-                <p className="text-yellow-200 text-xs mt-1">Contraseña admin: <span className="font-mono bg-yellow-100 text-yellow-800 px-2 py-1 rounded">admin123</span></p>
+                {/* Contraseña eliminada */}
               </div>
             </div>
             
@@ -184,21 +185,31 @@ const Admin = ({ onLogout }) => {
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800">Solicitudes de Canciones</h2>
-                  <p className="text-gray-600">Total: {solicitudes.length} solicitudes</p>
+                  <p className="text-gray-600">Total: {solicitudesFiltradas.length} solicitudes</p>
                 </div>
-                {solicitudes.length > 0 && (
-                  <button
-                    onClick={limpiarTodas}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                  >
-                    Limpiar Todo
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Filtro de fecha */}
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={e => setSelectedDate(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-purple-400"
+                    max={format(new Date(), 'yyyy-MM-dd')}
+                    min={fechasDisponibles[fechasDisponibles.length - 1]}
+                  />
+                  {solicitudesFiltradas.length > 0 && (
+                    <button
+                      onClick={limpiarTodas}
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                    >
+                      Limpiar Todo
+                    </button>
+                  )}
+                </div>
               </div>
-
               {/* Lista de solicitudes */}
               <div className="space-y-6 max-h-96 overflow-y-auto">
-                {solicitudes.length === 0 ? (
+                {solicitudesFiltradas.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="flex justify-center mb-4">
                       <Music className="w-16 h-16 text-gray-400" />
@@ -207,53 +218,48 @@ const Admin = ({ onLogout }) => {
                     <p className="text-gray-400">Las nuevas solicitudes aparecerán aquí automáticamente</p>
                   </div>
                 ) : (
-                  Object.entries(agruparSolicitudesPorFecha()).map(([fecha, solicitudesDelDia]) => (
-                    <div key={fecha} className="space-y-3">
-                      <div className="sticky top-0 bg-white/95 backdrop-blur-sm rounded-lg p-3 border border-gray-200 shadow-sm">
-                        <h4 className="font-semibold text-gray-700 text-sm capitalize">
-                          📅 {fecha}
-                        </h4>
-                      </div>
-                      <div className="space-y-3">
-                        {solicitudesDelDia.map((solicitud) => {
-                          return (
-                            <div key={solicitud.id} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100 animate-fade-in">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1 flex items-start space-x-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={solicitud.reproducida}
-                                    onChange={() => toggleReproducida(solicitud.id)}
-                                    className="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
-                                  />
-                                  <div className="flex-1">
-                                    <h3 className={`font-semibold text-lg ${solicitud.reproducida ? 'text-gray-400 line-through' : 'text-gray-800'}`}>
-                                      {solicitud.cancion}
-                                    </h3>
-                                    <p className="text-gray-500 text-sm">
-                                      🕐 {new Date(solicitud.timestamp).toLocaleTimeString('es-ES', {
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                      })}
-                                    </p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => eliminarSolicitud(solicitud.id)}
-                                  className="text-red-500 hover:text-red-700 ml-4 p-1 hover:bg-red-50 rounded"
-                                  title="Eliminar solicitud"
-                                >
-                                  🗑️
-                                </button>
-                              </div>
+                  solicitudesFiltradas.map((solicitud) => {
+                    return (
+                      <div key={solicitud.id} className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-100 animate-fade-in">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 flex items-start space-x-3">
+                            <input
+                              type="checkbox"
+                              checked={solicitud.reproducida}
+                              onChange={() => toggleReproducida(solicitud.id)}
+                              className="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                            />
+                            <div className="flex-1">
+                              <h3 className={`font-semibold text-lg ${solicitud.reproducida ? 'text-gray-400 line-through' : 'text-gray-800'}`}>{solicitud.cancion}</h3>
+                              <p className="text-gray-500 text-sm">🕐 {new Date(solicitud.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
                             </div>
-                          )
-                        })}
+                          </div>
+                          <button
+                            onClick={() => eliminarSolicitud(solicitud.id)}
+                            className="text-red-500 hover:text-red-700 ml-4 p-1 hover:bg-red-50 rounded"
+                            title="Eliminar solicitud"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    )
+                  })
                 )}
               </div>
+            </div>
+            {/* Nota visible de fase de prueba debajo del modal */}
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 my-6 rounded shadow animate-fade-in">
+              <strong className="block mb-1">🔔 Nota Importante</strong>
+              <span>
+                Esta página se encuentra actualmente en fase de prueba. Por ello, múltiples usuarios pueden estar accediendo al mismo tiempo, lo que significa que podrías ver canciones que no has enviado tú.
+                <br /><br />
+                Te sugerimos verificar primero si tu canción fue correctamente enviada.
+                <br /><br />
+                📌 Si deseas acceder al servicio completo y personalizado, donde esta nota no aparecerá, por favor contáctame a través del apartado de Contacto en mi página oficial. Allí encontrarás mis datos para atención directa y acceso al servicio privado.
+                <br /><br />
+                ¡Gracias por tu comprensión y por apoyar esta etapa de desarrollo!
+              </span>
             </div>
           </div>
 

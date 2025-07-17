@@ -80,8 +80,19 @@ const Usuario = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 relative">
+      {/* Nota visible para el usuario en modo prueba, flotante en desktop */}
+      <div className="hidden md:block fixed top-8 right-8 w-[320px] z-50">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-900 p-3 rounded shadow animate-fade-in text-sm">
+          <strong className="block mb-1">👋 ¡Bienvenido!</strong>
+          <span>
+            Aquí puedes enviar tu canción para el servicio. Una vez la envíes, dirígete al otro botón que dice &quot;Admin&quot; (donde encontraste mi proyecto), y desde allí podrás verificar que tu canción fue recibida correctamente.
+            <br /><br />
+            Recuerda que esta es una versión de prueba, así que si deseas una atención más personalizada, no dudes en contactarme desde el apartado de Contacto en mi página oficial.
+          </span>
+        </div>
+      </div>
+      <div className="w-full max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="flex justify-center mb-4">
@@ -184,6 +195,17 @@ const Usuario = () => {
         <div className="mt-6 text-center text-xs text-white/60">
           <p>Desarrollado por <a href="https://jpbytes.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-white transition-colors duration-200">jpbytes</a></p>
           <p>© {new Date().getFullYear()} Todos los derechos reservados</p>
+        </div>
+        {/* Nota visible para el usuario en móvil */}
+        <div className="block md:hidden mt-8">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-900 p-3 rounded shadow animate-fade-in text-sm">
+            <strong className="block mb-1">👋 ¡Bienvenido!</strong>
+            <span>
+              Aquí puedes enviar tu canción para el servicio. Una vez la envíes, dirígete al otro botón que dice &quot;Admin&quot; (donde encontraste mi proyecto), y desde allí podrás verificar que tu canción fue recibida correctamente.
+              <br /><br />
+              Recuerda que esta es una versión de prueba, así que si deseas una atención más personalizada, no dudes en contactarme desde el apartado de Contacto en mi página oficial.
+            </span>
+          </div>
         </div>
       </div>
     </div>
