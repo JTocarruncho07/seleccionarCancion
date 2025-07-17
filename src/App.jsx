@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Usuario from './components/Usuario'
 import Admin from './components/Admin'
 import LoginAdmin from './components/LoginAdmin'
-import Prueba from './components/prueba'
 import { useEffect, useState } from 'react'
 
 function App() {
@@ -43,7 +42,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/usuario" replace />} />
         <Route path="/usuario" element={<Usuario />} />
-        <Route path="/prueba" element={<Prueba/>}/>
         <Route 
           path="/admin" 
           element={
