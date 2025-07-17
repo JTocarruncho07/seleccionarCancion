@@ -57,6 +57,7 @@ const LoginAdmin = ({ onLogin }) => {
                 disabled={loading}
                 required
               />
+              <p className="text-yellow-600 text-xs mt-2">Contraseña de ejemplo: <span className="font-mono bg-yellow-100 text-yellow-800 px-2 py-1 rounded">admin123</span></p>
             </div>
 
             {error && (

@@ -136,6 +136,7 @@ const Admin = ({ onLogout }) => {
               <div>
                 <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
                 <p className="text-white/70 text-sm">Gestiona las solicitudes musicales</p>
+                <p className="text-yellow-200 text-xs mt-1">Contraseña admin: <span className="font-mono bg-yellow-100 text-yellow-800 px-2 py-1 rounded">admin123</span></p>
               </div>
             </div>
             
