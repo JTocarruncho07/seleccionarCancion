@@ -193,7 +193,7 @@ const Usuario = () => {
 
         {/* Copyright Footer */}
         <div className="mt-6 text-center text-xs text-white/60">
-          <p>Desarrollado por <a href="https://jpbytes.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-white transition-colors duration-200">jpbytes</a></p>
+          <p>Desarrollado por <a href="https://codevjp.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-white transition-colors duration-200">CodevJP</a></p>
           <p>© {new Date().getFullYear()} Todos los derechos reservados</p>
         </div>
         {/* Nota visible para el usuario en móvil */}

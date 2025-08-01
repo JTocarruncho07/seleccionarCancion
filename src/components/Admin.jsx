@@ -416,7 +416,7 @@ const Admin = ({ onLogout }) => {
       <div className="bg-white/10 backdrop-blur-md border-t border-white/20 mt-8 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="text-center text-sm text-white/60">
-            <p>Desarrollado por <a href="https://jpbytes.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-white transition-colors duration-200">jpbytes</a></p>
+            <p>Desarrollado por <a href="https://codevjp.netlify.app/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-white transition-colors duration-200">CodevJP</a></p>
             <p>© {new Date().getFullYear()} Todos los derechos reservados</p>
           </div>
         </div>
