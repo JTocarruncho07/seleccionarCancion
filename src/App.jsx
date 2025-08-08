@@ -3,6 +3,9 @@ import Usuario from './components/Usuario'
 import Admin from './components/Admin'
 import LoginAdmin from './components/LoginAdmin'
 import Prueba from './components/prueba'
+import Login from './components/auth/Login'
+import Register from './components/auth/Register'
+
 import { useEffect, useState } from 'react'
 
 function App() {
@@ -44,8 +47,10 @@ function App() {
         <Route path="/" element={<Navigate to="/usuario" replace />} />
         <Route path="/usuario" element={<Usuario />} />
         <Route path="/prueba" element={<Prueba/>}/>
+        <Route path="/login" element={<Login/>}/>
+        <Route path="/register" element={<Register/>}/>
         <Route 
-          path="/admin" 
+          path="/admin"   
           element={
             isAuthenticated ? 
               <Admin onLogout={handleLogout} /> : 
