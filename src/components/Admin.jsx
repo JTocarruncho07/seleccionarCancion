@@ -27,7 +27,7 @@ const Admin = ({ onLogout }) => {
       setSolicitudes(docs.reverse())
     })
     return () => unsuscribe()
-  }, [])
+  }, )
 
   useEffect(() => {
     // Manejar instalación PWA
